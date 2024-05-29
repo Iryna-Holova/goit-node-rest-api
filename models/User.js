@@ -18,6 +18,7 @@ const userSchema = new Schema(
       enum: constants.SUBSCRIPTIONS,
       default: "starter",
     },
+    avatarURL: String,
     token: {
       type: String,
       default: null,
