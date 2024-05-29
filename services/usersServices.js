@@ -10,4 +10,6 @@ const createUser = async (data) => {
 
 const updateUser = (filter, data) => User.findOneAndUpdate(filter, data);
 
-export default { findUser, createUser, updateUser };
+const deleteAllUsers = () => User.deleteMany();
+
+export default { findUser, createUser, updateUser, deleteAllUsers };
