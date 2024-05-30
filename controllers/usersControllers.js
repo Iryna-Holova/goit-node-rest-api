@@ -1,8 +1,14 @@
+import fs from "fs/promises";
+import path from "path";
+import gravatar from "gravatar";
+import Jimp from "jimp";
 import usersServices from "../services/usersServices.js";
 import ctrlWrapper from "../decorators/ctrlWrapper.js";
 import HttpError from "../helpers/HttpError.js";
 import compareHash from "../helpers/compareHash.js";
 import jwt from "../helpers/jwt.js";
+
+const avatarsPath = path.resolve("public", "avatars");
 
 const register = async (req, res) => {
   const { email } = req.body;
@@ -10,13 +16,14 @@ const register = async (req, res) => {
   if (user) {
     throw HttpError(409, "Email in use");
   }
-
-  const newUser = await usersServices.createUser(req.body);
+  const avatarURL = gravatar.url(email, { s: "250", d: "identicon" }, false);
+  const newUser = await usersServices.createUser({ ...req.body, avatarURL });
 
   res.status(201).json({
     user: {
       email: newUser.email,
       subscription: newUser.subscription,
+      avatarURL: newUser.avatarURL,
     },
   });
 };
@@ -46,6 +53,7 @@ const login = async (req, res) => {
     user: {
       email: user.email,
       subscription: user.subscription,
+      avatarURL: user.avatarURL,
     },
   });
 };
@@ -58,9 +66,9 @@ const logout = async (req, res) => {
 };
 
 const current = (req, res) => {
-  const { email, subscription } = req.user;
+  const { email, subscription, avatarURL } = req.user;
 
-  res.json({ email, subscription });
+  res.json({ email, subscription, avatarURL });
 };
 
 const updateSubscription = async (req, res) => {
@@ -71,10 +79,36 @@ const updateSubscription = async (req, res) => {
   res.json({ email, subscription });
 };
 
+const updateAvatar = async (req, res) => {
+  const { _id } = req.user;
+  if (!req.file) {
+    throw HttpError(400, "Image not found");
+  }
+
+  const { path: oldPath, mimetype } = req.file;
+  if (
+    !["image/bmp", "image/jpeg", "image/png", "image/jpg"].includes(mimetype)
+  ) {
+    throw HttpError(400, "Unsupported file type");
+  }
+
+  const filename = `${_id}_${Date.now()}.png`;
+  const newPath = path.join(avatarsPath, filename);
+  const avatar = await Jimp.read(oldPath);
+  avatar.cover(250, 250).write(newPath);
+  fs.unlink(oldPath);
+
+  const avatarURL = path.join("avatars", filename);
+  const result = await usersServices.updateUser({ _id }, { avatarURL });
+
+  res.json({ avatarURL: result.avatarURL });
+};
+
 export default {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   logout: ctrlWrapper(logout),
   current: ctrlWrapper(current),
   updateSubscription: ctrlWrapper(updateSubscription),
+  updateAvatar: ctrlWrapper(updateAvatar),
 };

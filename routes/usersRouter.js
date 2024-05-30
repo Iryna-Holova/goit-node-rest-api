@@ -2,6 +2,7 @@ import express from "express";
 import usersControllers from "../controllers/usersControllers.js";
 import isEmptyBody from "../middlewares/isEmptyBody.js";
 import authenticate from "../middlewares/authenticate.js";
+import upload from "../middlewares/upload.js";
 import validateBody from "../decorators/validateBody.js";
 import usersSchemas from "../schemas/usersSchemas.js";
 
@@ -31,6 +32,13 @@ usersRouter.patch(
   isEmptyBody,
   validateBody(usersSchemas.updateSubscriptionSchema),
   usersControllers.updateSubscription
+);
+
+usersRouter.patch(
+  "/avatars",
+  authenticate,
+  upload.single("avatar"),
+  usersControllers.updateAvatar
 );
 
 export default usersRouter;
