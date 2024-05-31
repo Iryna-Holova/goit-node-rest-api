@@ -15,6 +15,15 @@ usersRouter.post(
   usersControllers.register
 );
 
+usersRouter.get("/verify/:verificationToken", usersControllers.verify);
+
+usersRouter.post(
+  "/verify",
+  isEmptyBody,
+  validateBody(usersSchemas.emailSchema),
+  usersControllers.resendVerify
+);
+
 usersRouter.post(
   "/login",
   isEmptyBody,
