@@ -16,10 +16,19 @@ const loginSchema = Joi.object({
   }),
 });
 
+const emailSchema = Joi.object({
+  email: Joi.string().pattern(constants.EMAIL_REGEXP).required(),
+});
+
 const updateSubscriptionSchema = Joi.object({
   subscription: Joi.string()
     .valid(...constants.SUBSCRIPTIONS)
     .required(),
 });
 
-export default { registerSchema, loginSchema, updateSubscriptionSchema };
+export default {
+  registerSchema,
+  loginSchema,
+  emailSchema,
+  updateSubscriptionSchema,
+};
